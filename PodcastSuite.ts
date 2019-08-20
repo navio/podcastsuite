@@ -111,6 +111,15 @@ class PodcastSuite {
     }
 
     /*
+    Validate if a Podcast is Fresh
+    @param podcast: IPodcast 
+    @return Boleean
+    */
+    private static isFresh(podcast: IPodcast, config: { fresh: Number }): boolean{
+      return Date.now() - podcast.created < config.fresh;
+    }
+
+    /*
     Convert IRSS Object into IPodcast Object
     @param json: IRSS obect to be converted into IPodcast Ojbect
     @return IPodcast Object
@@ -251,7 +260,7 @@ class PodcastSuite {
     */
     private async requestURL(podcastURL:URL, fresh = this.fresh): Promise<IPodcast> {
         const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON())
-        if(podcastFromMemory && ( Date.now() - podcastFromMemory.created < fresh ) ) {
+        if(podcastFromMemory && PodcastSuite.isFresh(podcastFromMemory, {fresh: this.fresh })) {
             return podcastFromMemory;
         }
         return this.refreshURL(podcastURL);
@@ -267,6 +276,7 @@ class PodcastSuite {
         const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON())
         if(podcastFromMemory) {
             fn(podcastFromMemory);
+            if ( PodcastSuite.isFresh(podcastFromMemory, {fresh: this.fresh }) ) return;
         }
         const podcastFromWeb: IPodcast = await this.refreshURL(podcastURL);
         if( podcastFromWeb.items[0] !== podcastFromMemory.items[0] ){
@@ -285,6 +295,7 @@ class PodcastSuite {
         await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
         return podcastFromWeb;
     }
+
 
    /*
     Initialize Library based on provided podcast URL.

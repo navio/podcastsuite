@@ -252,7 +252,7 @@ class PodcastSuite {
     */
     private async requestURL(podcastURL:URL, fresh = this.fresh): Promise<IPodcast> {
         const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON())
-        if(podcastFromMemory && ( Date.now() - podcastFromMemory.created) > fresh ) {
+        if(podcastFromMemory && ( Date.now() - podcastFromMemory.created < fresh ) ) {
             return podcastFromMemory;
         }
         return this.refreshURL(podcastURL);

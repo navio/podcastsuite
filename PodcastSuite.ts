@@ -3,7 +3,7 @@ import DB from "./DB";
 
 interface IPodcastSuiteConfig {
     proxy?: IProxy;
-    podcasts?: Array<URL>;
+    podcasts?: string[];
     fresh?: Number;
 }
 
@@ -119,7 +119,7 @@ class PodcastSuite {
         const channel = Array.isArray(json.rss.channel) ?
                         json.rss.channel[0] : 
                         json.rss.channel;
-        const rss: IPodcast = { items: [] };
+        const rss: IPodcast = { items: [] , created: Date.now() };
 
         if (channel.title) {
             rss.title = channel.title[0];
@@ -205,7 +205,6 @@ class PodcastSuite {
     
             });
         }
-        rss.created = Date.now();
         return rss;
     }
 
@@ -287,7 +286,11 @@ class PodcastSuite {
         return podcastFromWeb;
     }
 
-    private async init(iKeys:URL[]){
+   /*
+    Initialize Library based on provided podcast URL.
+    @param ikeys:string[]
+    */
+    private async init(iKeys:string[]){
         const dbKeys = await PodcastSuite.db.keys();
         const keys = Array.from(new Set( [...iKeys, ...dbKeys] ));
         keys.forEach( podcast => this.requestURLFn( new URL(podcast.toString()), ()=>null ));

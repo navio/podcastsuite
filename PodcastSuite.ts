@@ -2,8 +2,9 @@ import xml2js from 'xml2js';
 import DB from "./DB";
 
 interface IPodcastSuiteConfig {
-    proxy?: IProxy,
-    podcasts?: Array<URL>
+    proxy?: IProxy;
+    podcasts?: Array<URL>;
+    fresh?: Number;
 }
 
 interface IProxy {
@@ -17,6 +18,7 @@ interface IPodcast {
     url?: string;
     image?: string;
     items?: any[];
+    created: number;
 }
 
 interface IRSS {
@@ -38,6 +40,8 @@ const REQCONFIG = {
     },
 }
 
+const FRESH = 600000;
+
 class PodcastSuite {
 
     /*
@@ -55,7 +59,7 @@ class PodcastSuite {
     @param porxy: IProxy object that contain urls that need to be prefixed to any URL.
     @return string url.
     */
-    public static proxyURL(url: URL, proxy?: IProxy): string{
+    public static proxyURL(url: URL, proxy: IProxy): string{
         const { protocol, hostname, pathname, search, hash } = url;
         return `${proxy[protocol]}${hostname}${pathname}${search}${hash}`;
     }
@@ -90,14 +94,14 @@ class PodcastSuite {
     */
     public static fetch(url: URL, config?: { proxy?: IProxy, signal? }): Promise<IPodcast>{
         const { proxy, signal } = config;
-        const podcastURL = proxy ? PodcastSuite.proxyURL(url) : url;
+        const podcastURL = proxy ? PodcastSuite.proxyURL(url, proxy ) : url;
         return new Promise( (accept, reject) => {
-            fetch( podcastURL.toString(), {signal, ...REQCONFIG })
+            fetch( podcastURL.toString(), { signal, ...REQCONFIG })
             .then( rawresponse => {
                 if(!rawresponse.ok){
                     throw "Error Message";
                 }
-                return rawresponse.json();
+                return rawresponse.text();
             })
             .then(PodcastSuite.parser)
             .then((rss:IRSS) => Promise.resolve(PodcastSuite.format(rss)))
@@ -113,12 +117,10 @@ class PodcastSuite {
     */
     public static format(json: IRSS): IPodcast{
         const channel = Array.isArray(json.rss.channel) ?
-                        json.rss.channel : 
-                        json.rss.channel[0];
-
+                        json.rss.channel[0] : 
+                        json.rss.channel;
         const rss: IPodcast = { items: [] };
 
-    
         if (channel.title) {
             rss.title = channel.title[0];
         }
@@ -137,9 +139,8 @@ class PodcastSuite {
         if (!rss.image && channel["itunes:image"]) {
             rss.image = channel['itunes:image'][0].href
         }
-    
         rss.image =  Array.isArray(rss.image) && rss.image[0] || rss.image;
-    
+                
         if (channel.item) {
             if (!Array.isArray(channel.item)) {
                 channel.item = [channel.item];
@@ -203,7 +204,8 @@ class PodcastSuite {
                 rss.items.push(obj);
     
             });
-        } 
+        }
+        rss.created = Date.now();
         return rss;
     }
 
@@ -248,9 +250,9 @@ class PodcastSuite {
     @param fetch:URL object with the RSS path.
     @return Promise<IPodcast>.
     */
-    private async requestURL(podcastURL:URL): Promise<IPodcast> {
+    private async requestURL(podcastURL:URL, fresh = this.fresh): Promise<IPodcast> {
         const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON())
-        if(podcastFromMemory) {
+        if(podcastFromMemory && ( Date.now() - podcastFromMemory.created) > fresh ) {
             return podcastFromMemory;
         }
         return this.refreshURL(podcastURL);
@@ -267,7 +269,7 @@ class PodcastSuite {
         if(podcastFromMemory) {
             fn(podcastFromMemory);
         }
-        const podcastFromWeb: IPodcast = await PodcastSuite.fetch(podcastURL);
+        const podcastFromWeb: IPodcast = await this.refreshURL(podcastURL);
         if( podcastFromWeb.items[0] !== podcastFromMemory.items[0] ){
             await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
             fn(podcastFromWeb);
@@ -280,7 +282,7 @@ class PodcastSuite {
     @return Promise<IPodcast>.
     */
     private async refreshURL(podcastURL:URL): Promise<IPodcast> {
-        const podcastFromWeb: IPodcast = await PodcastSuite.fetch(podcastURL);
+        const podcastFromWeb: IPodcast = await PodcastSuite.fetch(podcastURL, { proxy:this.proxy });
         await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
         return podcastFromWeb;
     }
@@ -294,10 +296,12 @@ class PodcastSuite {
     private static db = DB;
     private library: Set<URL>;
     private proxy: IProxy;
+    private fresh: Number;
 
-    constructor( config: IPodcastSuiteConfig ) {
-        const { podcasts = [], proxy = PROXY } = config;
+    constructor( config: IPodcastSuiteConfig = {} ) {
+        const { podcasts = [], proxy = PROXY, fresh = FRESH } = config;
         this.proxy = proxy;
+        this.fresh = fresh;
         this.init(podcasts);
     }
 

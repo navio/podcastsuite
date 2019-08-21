@@ -15,7 +15,8 @@ interface IProxy {
 interface IPodcast {
     title?: string;
     description?: string;
-    url?: string;
+    url: string;
+    link?: string;
     image?: string;
     items?: any[];
     created: number;
@@ -92,21 +93,22 @@ class PodcastSuite {
     @param config?: { proxy: IPRoxy, signal }
     @return Object Error Object or Parsed RSS Object
     */
-    public static fetch(url: URL, config?: { proxy?: IProxy, signal? }): Promise<IPodcast>{
+    public static fetch(podcastURL: URL, config?: { proxy?: IProxy, signal? }): Promise<IPodcast>{
         const { proxy, signal } = config;
-        const podcastURL = proxy ? PodcastSuite.proxyURL(url, proxy ) : url;
-        let lenght = 0;
+        const podcastProxyURL = proxy ? PodcastSuite.proxyURL(podcastURL, proxy ) : podcastURL;
+        const url = podcastURL.toString();
+        let length = 0;
         return new Promise( (accept, reject) => {
-            fetch( podcastURL.toString(), { signal, method: 'GET', ...REQCONFIG })
+            fetch( podcastProxyURL.toString(), { signal, method: 'GET', ...REQCONFIG })
             .then( rawresponse => {
                 if(!rawresponse.ok){
                     throw "Error Message";
                 }
-                lenght = Number(rawresponse.headers.get("content-length"));
+                length = Number(rawresponse.headers.get("content-length"));
                 return rawresponse.text();
             })
             .then(PodcastSuite.parser)
-            .then((rss:IRSS) => Promise.resolve(PodcastSuite.format(rss, {lenght})))
+            .then((rss:IRSS) => Promise.resolve(PodcastSuite.format(rss, { length, url })))
             .then(accept)
             .catch(reject)
         })
@@ -130,10 +132,17 @@ class PodcastSuite {
     /*
     Validate if a Podcast is Fresh
     @param podcast: IPodcast 
+    @param config: { fresh: miliseconds, length: bytes },
     @return Boleean
     */
-    private static isFresh(podcast: IPodcast, config: { fresh: number }): boolean{
-      return Date.now() - podcast.created < config.fresh;
+    private static isFresh(podcast: IPodcast, config: { fresh: number, length }): boolean {
+      if(Date.now() - podcast.created < config.fresh){
+        return true;
+      }
+      if ( length === podcast.length ){
+        return true;
+      }
+      return false;
     }
 
     /*
@@ -141,11 +150,11 @@ class PodcastSuite {
     @param json: IRSS obect to be converted into IPodcast Ojbect
     @return IPodcast Object
     */
-    public static format(json: IRSS, init:Object = { lenght: Date.now() } ): IPodcast{
+    public static format(json: IRSS, init:{ length?: number, url?:string } = { length: Date.now() } ): IPodcast{
         const channel = Array.isArray(json.rss.channel) ?
                         json.rss.channel[0] : 
                         json.rss.channel;
-        const rss: IPodcast = Object.assign(init, { items: [] , created: Date.now() });
+        const rss: IPodcast = Object.assign(init, { items: [], created: Date.now() }); 
 
         if (channel.title) {
             rss.title = channel.title[0];
@@ -155,7 +164,7 @@ class PodcastSuite {
             rss.description = channel.description[0];
         }
         if (channel.link) {
-            rss.url = channel.link[0];
+            rss.link = channel.link[0];
         }
     
         if (channel.image) {
@@ -286,13 +295,8 @@ class PodcastSuite {
             if(fn) {
               fn(podcastFromMemory);
             }
-
-            if ( PodcastSuite.isFresh(podcastFromMemory, {fresh}) ){
-              return podcastFromMemory;
-            }
-
             const length = await PodcastSuite.fetchSize( podcastURL, { proxy:this.proxy } );
-            if ( length === podcastFromMemory.length ){
+            if ( PodcastSuite.isFresh(podcastFromMemory, {fresh, length }) ){
               return podcastFromMemory;
             }
         }

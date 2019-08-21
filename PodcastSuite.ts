@@ -4,7 +4,7 @@ import DB from "./DB";
 interface IPodcastSuiteConfig {
     proxy?: IProxy;
     podcasts?: string[];
-    fresh?: Number;
+    fresh?: number;
 }
 
 interface IProxy {
@@ -19,6 +19,7 @@ interface IPodcast {
     image?: string;
     items?: any[];
     created: number;
+    length?: number;
 }
 
 interface IRSS {
@@ -33,7 +34,6 @@ const PROXY: IProxy = {
 };
 
 const REQCONFIG = {
-    method: 'GET',
     headers: {
     'User-Agent': 'podcastsuite',
     'Accept': 'application/rss+xml'
@@ -95,16 +95,18 @@ class PodcastSuite {
     public static fetch(url: URL, config?: { proxy?: IProxy, signal? }): Promise<IPodcast>{
         const { proxy, signal } = config;
         const podcastURL = proxy ? PodcastSuite.proxyURL(url, proxy ) : url;
+        let lenght = 0;
         return new Promise( (accept, reject) => {
-            fetch( podcastURL.toString(), { signal, ...REQCONFIG })
+            fetch( podcastURL.toString(), { signal, method: 'GET', ...REQCONFIG })
             .then( rawresponse => {
                 if(!rawresponse.ok){
                     throw "Error Message";
                 }
+                lenght = Number(rawresponse.headers.get("content-length"));
                 return rawresponse.text();
             })
             .then(PodcastSuite.parser)
-            .then((rss:IRSS) => Promise.resolve(PodcastSuite.format(rss)))
+            .then((rss:IRSS) => Promise.resolve(PodcastSuite.format(rss, {lenght})))
             .then(accept)
             .catch(reject)
         })
@@ -115,7 +117,7 @@ class PodcastSuite {
     @param podcast: IPodcast 
     @return Boleean
     */
-    private static isFresh(podcast: IPodcast, config: { fresh: Number }): boolean{
+    private static isFresh(podcast: IPodcast, config: { fresh: number }): boolean{
       return Date.now() - podcast.created < config.fresh;
     }
 
@@ -124,11 +126,11 @@ class PodcastSuite {
     @param json: IRSS obect to be converted into IPodcast Ojbect
     @return IPodcast Object
     */
-    public static format(json: IRSS): IPodcast{
+    public static format(json: IRSS, init:Object = { lenght: Date.now() } ): IPodcast{
         const channel = Array.isArray(json.rss.channel) ?
                         json.rss.channel[0] : 
                         json.rss.channel;
-        const rss: IPodcast = { items: [] , created: Date.now() };
+        const rss: IPodcast = Object.assign(init, { items: [] , created: Date.now() });
 
         if (channel.title) {
             rss.title = channel.title[0];
@@ -214,7 +216,7 @@ class PodcastSuite {
     
             });
         }
-        return rss;
+        return rss
     }
 
     /*
@@ -310,7 +312,7 @@ class PodcastSuite {
     private static db = DB;
     private library: Set<URL>;
     private proxy: IProxy;
-    private fresh: Number;
+    private fresh: number;
 
     constructor( config: IPodcastSuiteConfig = {} ) {
         const { podcasts = [], proxy = PROXY, fresh = FRESH } = config;

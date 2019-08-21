@@ -112,6 +112,18 @@ class PodcastSuite {
         })
     }
 
+    private static async fetchLength(url: URL, config?: { proxy?: IProxy, signal? }){
+      const { proxy, signal } = config;
+      const podcastURL = proxy ? PodcastSuite.proxyURL(url, proxy ) : url;
+      try{
+        const response = await fetch( podcastURL.toString(), { signal, method: 'HEAD', ...REQCONFIG })
+        return Number(response.headers.get("content-length"));
+      }catch(error){
+        throw "Failed to fetch";
+      }
+    
+    }
+
     /*
     Validate if a Podcast is Fresh
     @param podcast: IPodcast 

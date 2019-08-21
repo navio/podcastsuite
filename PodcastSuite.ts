@@ -111,17 +111,20 @@ class PodcastSuite {
             .catch(reject)
         })
     }
-
-    private static async fetchLength(url: URL, config?: { proxy?: IProxy, signal? }){
+    
+    /*
+    fetch function that request RSS URL and get the size of the RSS.
+    @param fetch:URL object with the RSS path.
+    */
+    public static async fetchSize(url: URL, config?: { proxy?: IProxy, signal? }){
       const { proxy, signal } = config;
       const podcastURL = proxy ? PodcastSuite.proxyURL(url, proxy ) : url;
       try{
         const response = await fetch( podcastURL.toString(), { signal, method: 'HEAD', ...REQCONFIG })
         return Number(response.headers.get("content-length"));
       }catch(error){
-        throw "Failed to fetch";
+        return null;
       }
-    
     }
 
     /*
@@ -266,19 +269,6 @@ class PodcastSuite {
         const keys = await PodcastSuite.db.keys();
         return Promise.all(keys.map(fn));
     }
-
-    /*
-    Request URL if it exist in Memory it returns it, otherwise it fetch it and returns it.
-    @param fetch:URL object with the RSS path.
-    @return Promise<IPodcast>.
-    */
-    private async requestURL(podcastURL:URL, fresh = this.fresh): Promise<IPodcast> {
-        const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON())
-        if(podcastFromMemory && PodcastSuite.isFresh(podcastFromMemory, {fresh: this.fresh })) {
-            return podcastFromMemory;
-        }
-        return this.refreshURL(podcastURL);
-    }
     
     /*
     Request URL if it exist in Memory it executes FN with response, 
@@ -286,17 +276,34 @@ class PodcastSuite {
     @param fetch:URL object with the RSS path.
     @return null.
     */
-    private async requestURLFn(podcastURL:URL, fn:(data:IPodcast) => any){
-        const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON())
+    private async requestURL(podcastURL:URL, config: { fn?:(data:IPodcast) => any, fresh?: number } = {}){
+        
+        const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON());
+        const { fn = null , fresh = this.fresh } = config;
+        
         if(podcastFromMemory) {
-            fn(podcastFromMemory);
-            if ( PodcastSuite.isFresh(podcastFromMemory, {fresh: this.fresh }) ) return;
+            
+            if(fn) {
+              fn(podcastFromMemory);
+            }
+
+            if ( PodcastSuite.isFresh(podcastFromMemory, {fresh}) ){
+              return podcastFromMemory;
+            }
+
+            const length = await PodcastSuite.fetchSize( podcastURL, { proxy:this.proxy } );
+            if ( length === podcastFromMemory.length ){
+              return podcastFromMemory;
+            }
         }
+
         const podcastFromWeb: IPodcast = await this.refreshURL(podcastURL);
-        if( podcastFromWeb.items[0] !== podcastFromMemory.items[0] ){
-            await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
-            fn(podcastFromWeb);
+                
+        if(fn){
+          fn(podcastFromWeb);
         }
+
+        return podcastFromWeb;
     }
 
     /*
@@ -311,14 +318,14 @@ class PodcastSuite {
     }
 
 
-   /*
+    /*
     Initialize Library based on provided podcast URL.
     @param ikeys:string[]
     */
     private async init(iKeys:string[]){
         const dbKeys = await PodcastSuite.db.keys();
         const keys = Array.from(new Set( [...iKeys, ...dbKeys] ));
-        keys.forEach( podcast => this.requestURLFn( new URL(podcast.toString()), ()=>null ));
+        keys.forEach( podcast => this.requestURL( new URL(podcast.toString()), { fn: ()=>null } ));
     }
 
     private static db = DB;

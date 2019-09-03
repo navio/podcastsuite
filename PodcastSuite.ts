@@ -1,18 +1,18 @@
 import xml2js from 'xml2js';
 import DB from "./DB";
 
-interface IPodcastSuiteConfig {
+export interface IPodcastSuiteConfig {
     proxy?: IProxy;
     podcasts?: string[];
     fresh?: number;
 }
 
-interface IProxy {
+export interface IProxy {
     "https:": string,
     "http:": string,
 }
 
-interface IPodcast {
+export interface IPodcast {
     title?: string;
     description?: string;
     url: string;
@@ -29,7 +29,7 @@ interface IRSS {
     }
 }
 
-const PROXY: IProxy = {
+export const PROXY: IProxy = {
 	'https:': '/rss-pg/',
 	'http:': '/rss-less-pg/'
 };
@@ -44,15 +44,6 @@ const REQCONFIG = {
 const FRESH = 600000;
 
 class PodcastSuite {
-
-    /*
-     parseEngine: Parser Engine use to convert Response String into RSS Outouts 
-    */
-    public static parserEngine = new xml2js.Parser({
-        trim: false,
-        normalize: true,
-        mergeAttrs: true
-    });
 
     /*
     Receives a URL and IProxy? object and return a URL String prefixed with the proxy path.
@@ -75,7 +66,7 @@ class PodcastSuite {
     public static parser(content: string): Promise<IRSS> {
         return new Promise((accept, reject) => {
             try {
-                PodcastSuite.parserEngine.parseString(content, (err, result) => {
+                PodcastSuite.parserEngine(content, (err, result) => {
                     if (err) {
                         reject({ error: true });
                     }
@@ -113,6 +104,19 @@ class PodcastSuite {
             .catch(reject)
         })
     }
+
+    /*
+    fetch function that request Content URL and Parse it into a Blob object
+    @param fetch:URL object with the RSS path.
+    @param config?: { proxy: IPRoxy, signal }
+    @return Object Error Object or Blob Object
+    */
+    public static fetchContent(contentURL: URL, config?: { proxy?: IProxy, signal?, progress?: () => any }): any {
+        const { proxy, signal, progress } = config;
+        const contentProxyURL = proxy ? PodcastSuite.proxyURL(contentURL, proxy ) : contentURL;
+        return fetch(signal, { method: 'GET'} )
+        .then( raw => raw.ok ? raw.blob() : Promise.reject(raw));
+    }
     
     /*
     fetch function that request RSS URL and get the size of the RSS.
@@ -132,10 +136,9 @@ class PodcastSuite {
     /*
     Validate if a Podcast is Fresh
     @param podcast: IPodcast 
-    @param config: { fresh: miliseconds, length: bytes },
     @return Boleean
     */
-    private static isFresh(podcast: IPodcast, config: { fresh: number, length }): boolean {
+    private static isFresh(podcast: IPodcast, config: { fresh: number, length: number }): boolean {
       if(Date.now() - podcast.created < config.fresh){
         return true;
       }
@@ -144,6 +147,15 @@ class PodcastSuite {
       }
       return false;
     }
+
+    /*
+    parseEngine: Parser Engine use to convert Response String into RSS Outouts 
+    */
+    private static parserEngine = new xml2js.Parser({
+        trim: false,
+        normalize: true,
+        mergeAttrs: true
+    }).parseString;
 
     /*
     Convert IRSS Object into IPodcast Object
@@ -227,17 +239,16 @@ class PodcastSuite {
                     obj.enclosures = [];
                     if (!Array.isArray(val.enclosure))
                         val.enclosure = [val.enclosure];
-                    val.enclosure.forEach(function (enclosure) {
+                        val.enclosure.forEach(function (enclosure) {
                         var enc = {};
                         for (const x in enclosure) {
                             enc[x] = enclosure[x][0];
                         }
                         obj.enclosures.push(enc);
                     });
-    
+                  obj.media = obj.enclosures.length > 0 ? obj.enclosures[0] : null;
                 }
                 rss.items.push(obj);
-    
             });
         }
         return rss
@@ -250,7 +261,7 @@ class PodcastSuite {
     @return IPodcast Object
     @throw Invalid URL
     */
-    public getPodcast(key:string, latest = false){
+    public async getPodcast(key: string, latest = false){
         try {
             const podcast = new URL(key);
             return latest ? 
@@ -259,6 +270,28 @@ class PodcastSuite {
         }catch(e){
             throw "Not a Valid URL";
         }
+    }
+
+    /*
+    Get Content Data from DB, if it doesn't exist it will fetch it.
+    @param key: string with url
+    @param? refresh: if true forces to ignore memory and get the latest version available.
+    @return Blob Object
+    @throw Invalid URL
+    */
+    public async getContent(contentURL: URL, config?: {refresh?: boolean}) {
+      const contentFromMemory = await PodcastSuite.db.get(contentURL.toJSON());
+      if(contentFromMemory && !config.refresh){
+        return contentFromMemory;
+      }
+      try{
+        const fetchedContent = await PodcastSuite.fetchContent(contentURL, {proxy: this.proxy});
+        await PodcastSuite.db.set(contentURL.toJSON(), fetchedContent);
+        return fetchedContent;
+      }catch(error){
+        console.error(error);
+        throw "Error Retriving Content";
+      }
     }
 
     /*
@@ -295,7 +328,7 @@ class PodcastSuite {
             if(fn) {
               fn(podcastFromMemory);
             }
-            const length = await PodcastSuite.fetchSize( podcastURL, { proxy:this.proxy } );
+            const length = await PodcastSuite.fetchSize( podcastURL, { proxy: this.proxy } );
             if ( PodcastSuite.isFresh(podcastFromMemory, {fresh, length }) ){
               return podcastFromMemory;
             }
@@ -320,7 +353,6 @@ class PodcastSuite {
         await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
         return podcastFromWeb;
     }
-
 
     /*
     Initialize Library based on provided podcast URL.

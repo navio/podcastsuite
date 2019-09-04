@@ -114,10 +114,10 @@ class PodcastSuite {
     */
     public static fetchContent(contentURL: URL, config?: { proxy?: IProxy, signal?, progress?: () => any }): any {
         const { proxy, signal, progress } = config;
-        const contentProxyURL = proxy ? PodcastSuite.proxyURL(contentURL, proxy ) : contentURL;
-        return fetch(signal, { method: 'GET'} )
+        const contentProxyURL: string  = proxy ? PodcastSuite.proxyURL(contentURL, proxy) : contentURL.toString();
+        return fetch(contentProxyURL, { method: 'GET', signal } )
         .then(StreamReader(progress))
-        .then( raw => raw.ok ? raw.blob() : Promise.reject(raw));
+        .then( raw => raw.blob());
     }
     
     /*

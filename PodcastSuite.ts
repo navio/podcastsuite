@@ -1,5 +1,6 @@
 import xml2js from 'xml2js';
 import DB from "./DB";
+import StreamReader from './StreamReader';
 
 export interface IPodcastSuiteConfig {
     proxy?: IProxy;
@@ -41,7 +42,7 @@ const REQCONFIG = {
     },
 }
 
-const FRESH = 600000;
+const FRESH = 3600000;
 
 class PodcastSuite {
 
@@ -115,6 +116,7 @@ class PodcastSuite {
         const { proxy, signal, progress } = config;
         const contentProxyURL = proxy ? PodcastSuite.proxyURL(contentURL, proxy ) : contentURL;
         return fetch(signal, { method: 'GET'} )
+        .then(StreamReader(progress))
         .then( raw => raw.ok ? raw.blob() : Promise.reject(raw));
     }
     
@@ -138,15 +140,19 @@ class PodcastSuite {
     @param podcast: IPodcast 
     @return Boleean
     */
-    private static isFresh(podcast: IPodcast, config: { fresh: number, length: number }): boolean {
-      if(Date.now() - podcast.created < config.fresh){
+    private static isFresh(podcast: IPodcast, config: { fresh?: number, length?: number }): boolean {
+      if( config.fresh && ( Date.now() - podcast.created ) < config.fresh){
         return true;
       }
-      if ( length === podcast.length ){
+      if ( config.length && config.length === podcast.length ){
         return true;
       }
       return false;
     }
+    
+
+
+
 
     /*
     parseEngine: Parser Engine use to convert Response String into RSS Outouts 
@@ -279,13 +285,15 @@ class PodcastSuite {
     @return Blob Object
     @throw Invalid URL
     */
-    public async getContent(contentURL: URL, config?: {refresh?: boolean}) {
+    public async getContent(contentURL: URL, config: {refresh?: boolean} = {}) {
       const contentFromMemory = await PodcastSuite.db.get(contentURL.toJSON());
-      if(contentFromMemory && !config.refresh){
+      const { refresh = false } = config;
+      if(contentFromMemory && !refresh){
         return contentFromMemory;
       }
       try{
-        const fetchedContent = await PodcastSuite.fetchContent(contentURL, {proxy: this.proxy});
+        const fetchedContent = 
+        await PodcastSuite.fetchContent(contentURL, {proxy: this.proxy});
         await PodcastSuite.db.set(contentURL.toJSON(), fetchedContent);
         return fetchedContent;
       }catch(error){
@@ -324,13 +332,17 @@ class PodcastSuite {
         const { fn = null , fresh = this.fresh } = config;
         
         if(podcastFromMemory) {
-            
             if(fn) {
               fn(podcastFromMemory);
             }
-            const length = await PodcastSuite.fetchSize( podcastURL, { proxy: this.proxy } );
-            if ( PodcastSuite.isFresh(podcastFromMemory, {fresh, length }) ){
+            
+            if ( PodcastSuite.isFresh(podcastFromMemory, { fresh }) ){
               return podcastFromMemory;
+            } else {
+              const length = await PodcastSuite.fetchSize( podcastURL, { proxy: this.proxy } );
+              if ( PodcastSuite.isFresh(podcastFromMemory, { length }) ){
+                return podcastFromMemory;
+              }
             }
         }
 
@@ -361,7 +373,7 @@ class PodcastSuite {
     private async init(iKeys:string[]){
         const dbKeys = await PodcastSuite.db.keys();
         const keys = Array.from(new Set( [...iKeys, ...dbKeys] ));
-        keys.forEach( podcast => this.requestURL( new URL(podcast.toString()), { fn: ()=>null } ));
+        keys.forEach( podcast => this.requestURL( new URL(podcast.toString()), { fn: ()=>null, fresh: this.fresh } ));
     }
 
     private static db = DB;

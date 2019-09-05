@@ -1,5 +1,9 @@
 ## Podcast Suite
 Podcast Suite is JS Library focused on handling Podcast RSS Sources.
+<a href="https://www.npmjs.org/package/smallfetch">
+   <img src="https://badgen.net/npm/v/podcastsuite" alt="NPM PodcastSuite">  
+ </a> 
+
 ### Features:
 * Fetch RSS Content
 * Proxy Request
@@ -8,6 +12,7 @@ Podcast Suite is JS Library focused on handling Podcast RSS Sources.
 * Async Events
 * Caching Engine powered by indexDB
 * Freshness status
+* Offline Media
 
 ```javascript
 import PS from 'podcastsuite';

@@ -1,9 +1,12 @@
 {
   "name": "podcastsuite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A set of utilities to work with Podcasts",
-  "main": "index.js",
-  "module": "index.umd.js",
+  "source": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/navio/podcastsuite.git"
+  },
   "scripts": {
     "start": "parcel build index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

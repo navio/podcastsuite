@@ -172,7 +172,7 @@ class PodcastSuite {
         const channel = Array.isArray(json.rss.channel) ?
                         json.rss.channel[0] : 
                         json.rss.channel;
-        const rss: IPodcast = Object.assign(init, { items: [], created: Date.now() }); 
+        const rss: any = Object.assign(init, { items: [], created: Date.now() }); 
 
         if (channel.title) {
             rss.title = channel.title[0];

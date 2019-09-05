@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A set of utilities to work with Podcasts",
   "main": "index.js",
+  "module": "index.umd.js",
   "scripts": {
     "start": "parcel build index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,6 +18,7 @@
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
+    "parcel": "^1.12.3",
     "typescript": "^3.5.3"
   }
 }

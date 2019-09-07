@@ -1,15 +1,18 @@
 {
   "name": "podcastsuite",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A set of utilities to work with Podcasts",
-  "source": "index.js",
+  "source": "index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.m.js",
+  "umd:main": "dist/index.umd.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/navio/podcastsuite.git"
   },
   "scripts": {
-    "start": "parcel build index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "microbundle build index.ts"
   },
   "keywords": [
     "Podcast"
@@ -21,7 +24,7 @@
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
-    "parcel": "^1.12.3",
-    "typescript": "^3.5.3"
+    "babel-plugin-transform-async-to-promises": "^0.8.14",
+    "microbundle": "^0.11.0"
   }
 }

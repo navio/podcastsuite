@@ -206,29 +206,44 @@ class PodcastSuite {
                 obj.guid = val.guid && val.guid[0] && (val.guid[0]['_'] || val.guid[0]);
     
                 if (val['itunes:subtitle']) {
-                    obj.itunes_subtitle = val['itunes:subtitle'][0];
+                    obj.subtitle = val['itunes:subtitle'][0];
                 }
                 if (val['itunes:summary']) {
-                    obj.itunes_summary = val['itunes:summary'][0];
+                    obj.summary = val['itunes:summary'][0];
                 }
                 if (val['itunes:author']) {
-                    obj.itunes_author = val['itunes:author'][0];
+                    obj.author = val['itunes:author'][0];
                 }
                 if (val['itunes:explicit']) {
-                    obj.itunes_explicit = val['itunes:explicit'][0];
+                    obj.explicit = val['itunes:explicit'][0];
                 }
                 if (val['itunes:duration']) {
-                    obj.itunes_duration = val['itunes:duration'][0];
+                    obj.duration = val['itunes:duration'][0];
                 }
                 if (val['itunes:season']) {
-                    obj.itunes_season = val['itunes:season'][0];
+                    obj.season = val['itunes:season'][0];
                 }
                 if (val['itunes:episode']) {
-                    obj.itunes_episode = val['itunes:episode'][0];
+                    obj.episode = val['itunes:episode'][0];
                 }
                 if (val['itunes:episodeType']) {
-                    obj.itunes_episodeType = val['itunes:episodeType'][0];
+                    obj.episodeType = val['itunes:episodeType'][0];
                 }
+                if(val['itunes:image']) {
+                    const hasImageHref = (val['itunes:image'][0] &&
+                                          val['itunes:image'][0].$ &&
+                                          val['itunes:image'][0].$.href);
+                    const image = hasImageHref ? val['itunes:image'][0].$.href : null;
+                    obj.image = image; 
+                }
+                const categories = []
+                if(channel['itunes:category']) {
+                    channel['itunes:category'].forEach((category) => {
+                    categories.push(category.$.text);
+                    });
+                }
+                obj.categories = categories;
+
                 if (val.pubDate) {
                     obj.created = Date.parse(val.pubDate[0]);
                 }
@@ -257,6 +272,7 @@ class PodcastSuite {
                 rss.items.push(obj);
             });
         }
+        
         return rss
     }
 

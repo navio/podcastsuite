@@ -6,6 +6,7 @@ export interface IPodcastSuiteConfig {
     proxy?: IProxy;
     podcasts?: string[];
     fresh?: number;
+    fetchEngine?: Function;
 }
 
 export interface IProxy {
@@ -85,13 +86,13 @@ class PodcastSuite {
     @param config?: { proxy: IPRoxy, signal }
     @return Object Error Object or Parsed RSS Object
     */
-    public static fetch(podcastURL: URL, config?: { proxy?: IProxy, signal? }): Promise<IPodcast>{
-        const { proxy, signal } = config;
+    public static fetch(podcastURL: URL, config?: { proxy?: IProxy, signal?, fetchEngine? }): Promise<IPodcast>{
+        const { proxy, signal, fetchEngine = fetch } = config;
         const podcastProxyURL = proxy ? PodcastSuite.proxyURL(podcastURL, proxy ) : podcastURL;
         const url = podcastURL.toString();
         let length = 0;
         return new Promise( (accept, reject) => {
-            fetch( podcastProxyURL.toString(), { signal, method: 'GET', ...REQCONFIG })
+            fetchEngine( podcastProxyURL.toString(), { signal, method: 'GET', ...REQCONFIG })
             .then( rawresponse => {
                 if(!rawresponse.ok){
                     throw "Error Message";
@@ -112,10 +113,10 @@ class PodcastSuite {
     @param config?: { proxy: IPRoxy, signal }
     @return Object Error Object or Blob Object
     */
-    public static fetchContent(contentURL: URL, config?: { proxy?: IProxy, signal?, progress?: () => any }): any {
-        const { proxy, signal, progress } = config;
+    public static fetchContent(contentURL: URL, config: { proxy?: IProxy, signal?, progress?: () => any, fetchEngine? } = {}): any {
+        const { proxy, signal, progress, fetchEngine = fetch } = config;
         const contentProxyURL: string  = proxy ? PodcastSuite.proxyURL(contentURL, proxy) : contentURL.toString();
-        return fetch(contentProxyURL, { method: 'GET', signal } )
+        return fetchEngine(contentProxyURL, { method: 'GET', signal } )
         .then(StreamReader(progress))
         .then( raw => raw.blob());
     }
@@ -124,11 +125,11 @@ class PodcastSuite {
     fetch function that request RSS URL and get the size of the RSS.
     @param fetch:URL object with the RSS path.
     */
-    public static async fetchSize(url: URL, config?: { proxy?: IProxy, signal? }){
-      const { proxy, signal } = config;
+    public static async fetchSize(url: URL, config?: { proxy?: IProxy, signal?, fetchEngine? }){
+      const { proxy, signal, fetchEngine = fetch  } = config;
       const podcastURL = proxy ? PodcastSuite.proxyURL(url, proxy ) : url;
       try{
-        const response = await fetch( podcastURL.toString(), { signal, method: 'HEAD', ...REQCONFIG })
+        const response = await fetchEngine( podcastURL.toString(), { signal, method: 'HEAD', ...REQCONFIG })
         return Number(response.headers.get("content-length"));
       }catch(error){
         return null;
@@ -150,9 +151,6 @@ class PodcastSuite {
       return false;
     }
     
-
-
-
 
     /*
     parseEngine: Parser Engine use to convert Response String into RSS Outouts 
@@ -309,7 +307,7 @@ class PodcastSuite {
       }
       try{
         const fetchedContent = 
-        await PodcastSuite.fetchContent(contentURL, {proxy: this.proxy});
+        await PodcastSuite.fetchContent(contentURL, {proxy: this.proxy, fetchEngine: this.fetchEngine });
         await PodcastSuite.db.set(contentURL.toJSON(), fetchedContent);
         return fetchedContent;
       }catch(error){
@@ -355,7 +353,7 @@ class PodcastSuite {
             if ( PodcastSuite.isFresh(podcastFromMemory, { fresh }) ){
               return podcastFromMemory;
             } else {
-              const length = await PodcastSuite.fetchSize( podcastURL, { proxy: this.proxy } );
+              const length = await PodcastSuite.fetchSize( podcastURL, { proxy: this.proxy, fetchEngine: this.fetchEngine } );
               if ( PodcastSuite.isFresh(podcastFromMemory, { length }) ){
                 return podcastFromMemory;
               }
@@ -396,12 +394,14 @@ class PodcastSuite {
     private library: Set<URL>;
     private proxy: IProxy;
     private fresh: number;
+    private fetchEngine: Function;
 
     constructor( config: IPodcastSuiteConfig = {} ) {
-        const { podcasts = [], proxy = PROXY, fresh = FRESH } = config;
+        const { podcasts = [], proxy = PROXY, fresh = FRESH, fetchEngine = fetch } = config;
         this.proxy = proxy;
         this.fresh = fresh;
         this.init(podcasts);
+        this.fetchEngine = fetchEngine;
     }
 
 };

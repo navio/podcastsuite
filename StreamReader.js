@@ -3,16 +3,18 @@
   @params progress 
   @return Response.
 */
-export default function (progress = () => null){
+export default function (progress){
     return (response) => {
       if (!response.ok) {
         throw Error(`Server responded ${response.status} ${response.statusText}`);
       }
-
+      if (!response.body.getReader && !progress){
+        return response;
+      }
       const contentLength = response.headers.get('content-length');
       const total = parseInt(contentLength,10);
       const reader = response.body.getReader();
-      let loaded = 0
+      let loaded = 0;
 
       return new Response(
         new ReadableStream({

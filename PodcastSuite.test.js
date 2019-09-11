@@ -1,14 +1,15 @@
-require("fake-indexeddb/auto");
+'use strict';
 
-const nodeFetch = jest.requireActual('node-fetch');
-const fetchMock = require('fetch-mock').sandbox();
+require("fake-indexeddb/auto");
+var nodeFetch = jest.requireActual('node-fetch');
+var fetchMock = require('fetch-mock').sandbox();
 Object.assign(fetchMock.config, nodeFetch, {
   fetch: nodeFetch
 });
 
-const PS = require("./dist/index.umd.js");
-const fetch = require("node-fetch");
-const sample = require("./mock/sample");
+var PS = require("./dist/index.umd.js");
+var fetch = require("node-fetch");
+var sample = require("./mock/sample");
 
 describe("Podcast Suite", () => {
 

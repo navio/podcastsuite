@@ -70,7 +70,7 @@ class PodcastSuite {
             try {
                 PodcastSuite.parserEngine(content, (err, result) => {
                     if (err) {
-                        reject({ error: true });
+                        reject({ error: true, err });
                     }
                     accept(result);
                 });
@@ -86,7 +86,7 @@ class PodcastSuite {
     @param config?: { proxy: IPRoxy, signal }
     @return Object Error Object or Parsed RSS Object
     */
-    public static fetch(podcastURL: URL, config?: { proxy?: IProxy, signal?, fetchEngine? }): Promise<IPodcast>{
+    public static fetch(podcastURL: URL, config: { proxy?: IProxy, signal?, fetchEngine? } = {}): Promise<IPodcast>{
         const { proxy, signal, fetchEngine = fetch } = config;
         const podcastProxyURL = proxy ? PodcastSuite.proxyURL(podcastURL, proxy ) : podcastURL;
         const url = podcastURL.toString();
@@ -94,6 +94,7 @@ class PodcastSuite {
         return new Promise( (accept, reject) => {
             fetchEngine( podcastProxyURL.toString(), { signal, method: 'GET', ...REQCONFIG })
             .then( rawresponse => {
+                
                 if(!rawresponse.ok){
                     throw "Error Message";
                 }
@@ -234,14 +235,6 @@ class PodcastSuite {
                     const image = hasImageHref ? val['itunes:image'][0].$.href : null;
                     obj.image = image; 
                 }
-                const categories = []
-                if(channel['itunes:category']) {
-                    channel['itunes:category'].forEach((category) => {
-                    categories.push(category.$.text);
-                    });
-                }
-                obj.categories = categories;
-
                 if (val.pubDate) {
                     obj.created = Date.parse(val.pubDate[0]);
                 }

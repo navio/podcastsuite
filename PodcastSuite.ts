@@ -119,7 +119,7 @@ class PodcastSuite {
         const contentProxyURL: string  = proxy ? PodcastSuite.proxyURL(contentURL, proxy) : contentURL.toString();
         return fetchEngine(contentProxyURL, { method: 'GET', signal } )
         .then(StreamReader(progress))
-        .then( raw => raw.blob());
+        .then( (raw) => raw.blob());
     }
     
     /*
@@ -299,10 +299,12 @@ class PodcastSuite {
         return contentFromMemory;
       }
       try{
+        
         const fetchedContent = 
         await PodcastSuite.fetchContent(contentURL, {proxy: this.proxy, fetchEngine: this.fetchEngine });
         await PodcastSuite.db.set(contentURL.toJSON(), fetchedContent);
         return fetchedContent;
+        
       }catch(error){
         console.error(error);
         throw "Error Retriving Content";
@@ -335,7 +337,7 @@ class PodcastSuite {
     */
     private async requestURL(podcastURL:URL, config: { fn?:(data:IPodcast) => any, fresh?: number } = {}){
         
-        const podcastFromMemory: IPodcast = await PodcastSuite.db.get(podcastURL.toJSON());
+        const podcastFromMemory: IPodcast | null = await PodcastSuite.db.get(podcastURL.toJSON());
         const { fn = null , fresh = this.fresh } = config;
         
         if(podcastFromMemory) {
@@ -383,8 +385,7 @@ class PodcastSuite {
         keys.forEach( podcast => this.requestURL( new URL(podcast.toString()), { fn: ()=>null, fresh: this.fresh } ));
     }
 
-    private static db = DB;
-    private library: Set<URL>;
+    private static db = DB();
     private proxy: IProxy;
     private fresh: number;
     private fetchEngine: Function;

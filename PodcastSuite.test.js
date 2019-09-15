@@ -54,7 +54,7 @@ describe("Podcast Suite", () => {
         expect(fetchMock.calls(toTest).length).toBe(1);
     });
 
-    it("should fetch first, then from memory later", async () => {
+    it("getPodcast should fetch first, then from memory later", async () => {
         const toTest = "https://tests.com/instance/rss";
         fetchMock.get(toTest, sample);
         const ps = new PS({fetchEngine: fetchMock});
@@ -64,6 +64,7 @@ describe("Podcast Suite", () => {
         expect(podcast1.title).toBe("Up First");
         expect(fetchMock.calls(toTest).length).toBe(1);
     });
+
 
     it("can get the size of the content", async () => {
         const toTest = "https://tests.com/head";

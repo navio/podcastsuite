@@ -168,7 +168,7 @@ class PodcastSuite {
     @param json: IRSS obect to be converted into IPodcast Ojbect
     @return IPodcast Object
     */
-   
+
     public static format = Format;
 
     /*
@@ -178,12 +178,13 @@ class PodcastSuite {
     @return IPodcast Object
     @throw Invalid URL
     */
-    public async getPodcast(key: string, latest = false){
+    public async getPodcast(key: string, config: { latest?: boolean, save?: boolean } = {} ){
+        const { latest = false , save = true }  = config;
         try {
             const podcast = new URL(key);
             return latest ? 
-                this.refreshURL(podcast): 
-                this.requestURL(podcast);
+                this.refreshURL(podcast, save): 
+                this.requestURL(podcast, { save });
         }catch(e){
             throw "Not a Valid URL";
         }
@@ -239,10 +240,10 @@ class PodcastSuite {
     @param fetch:URL object with the RSS path.
     @return null.
     */
-    private async requestURL(podcastURL:URL, config: { fn?:(data:IPodcast) => any, fresh?: number } = {}){
+    private async requestURL(podcastURL:URL, config: { fn?:(data:IPodcast) => any, fresh?: number, save?: boolean } = {}){
         
         const podcastFromMemory: IPodcast | null = await PodcastSuite.db.get(podcastURL.toJSON());
-        const { fn = null , fresh = this.fresh } = config;
+        const { fn = null , fresh = this.fresh, save = true } = config;
         
         if(podcastFromMemory) {
             if(fn) {
@@ -259,7 +260,7 @@ class PodcastSuite {
             }
         }
 
-        const podcastFromWeb: IPodcast = await this.refreshURL(podcastURL);
+        const podcastFromWeb: IPodcast = await this.refreshURL(podcastURL, save);
                 
         if(fn){
           fn(podcastFromWeb);
@@ -273,9 +274,12 @@ class PodcastSuite {
     @param fetch:URL object with the RSS path.
     @return Promise<IPodcast>.
     */
-    private async refreshURL(podcastURL:URL): Promise<IPodcast> {
+    private async refreshURL(podcastURL:URL, save: boolean = true): Promise<IPodcast> {
         const podcastFromWeb: IPodcast = await PodcastSuite.fetch(podcastURL, { proxy:this.proxy, fetchEngine: this.fetchEngine });
-        await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
+        if(save){
+            await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
+        }
+
         return podcastFromWeb;
     }
 

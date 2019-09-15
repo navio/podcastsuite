@@ -58,11 +58,12 @@ describe("Podcast Suite", () => {
         const toTest = "https://tests.com/instance/rss";
         fetchMock.get(toTest, sample);
         const ps = new PS({fetchEngine: fetchMock});
+        await ps.getPodcast(new URL(toTest), {save: false});
         const podcast = await ps.getPodcast(new URL(toTest));
         expect(podcast.title).toBe("Up First");
         const podcast1 = await ps.getPodcast(new URL(toTest));
         expect(podcast1.title).toBe("Up First");
-        expect(fetchMock.calls(toTest).length).toBe(1);
+        expect(fetchMock.calls(toTest).length).toBe(2);
     });
 
 

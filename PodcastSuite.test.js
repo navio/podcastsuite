@@ -72,5 +72,4 @@ describe("Podcast Suite", () => {
         const sizeL = await PS.fetchSize(new URL(toTest), { fetchEngine: fetchMock });
         expect(sizeL === size ).toBe(true)
     });
-
 });

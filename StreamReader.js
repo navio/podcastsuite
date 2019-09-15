@@ -5,15 +5,15 @@
 */
 export default function (progress){
     return (response) => {
-      if (!response.ok) {
-        throw Error(`Server responded ${response.status} ${response.statusText}`);
-      }
-      if (!response.body.getReader && !progress){
-        return response;
-      }
+
+      const reader = response.body &&
+                     response.body.getReader &&
+                     response.body.getReader();
+
+      if(!progress || !reader ) {  return response; }
+
       const contentLength = response.headers.get('content-length');
       const total = parseInt(contentLength,10);
-      const reader = response.body.getReader();
       let loaded = 0;
 
       return new Response(

@@ -368,7 +368,7 @@ class PodcastSuite {
     @return Promise<IPodcast>.
     */
     private async refreshURL(podcastURL:URL): Promise<IPodcast> {
-        const podcastFromWeb: IPodcast = await PodcastSuite.fetch(podcastURL, { proxy:this.proxy });
+        const podcastFromWeb: IPodcast = await PodcastSuite.fetch(podcastURL, { proxy:this.proxy, fetchEngine: this.fetchEngine });
         await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
         return podcastFromWeb;
     }
@@ -390,7 +390,7 @@ class PodcastSuite {
     private fetchEngine: Function;
 
     constructor( config: IPodcastSuiteConfig = {} ) {
-        const { podcasts = [], proxy = PROXY, fresh = FRESH, fetchEngine = fetch } = config;
+        const { podcasts = [], proxy, fresh = FRESH, fetchEngine = fetch } = config;
         this.proxy = proxy;
         this.fresh = fresh;
         this.init(podcasts);

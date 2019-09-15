@@ -20,10 +20,12 @@ export default (name = "podcasts", db = "podcastsuite" ) => ({
       del(key,store);
     }, 
     keys: async function(){
-      return await keys();
+      const store = new Store(this.db,this.name);
+      return await keys(store);
     },
     entries: async function(){
-      const keys = await this.keys();
+      const store = new Store(this.db,this.name);
+      const keys = await this.keys(store);
       return keys.map( (key) => get(key) );
     }
   });

@@ -275,11 +275,15 @@ class PodcastSuite {
     @return Promise<IPodcast>.
     */
     private async refreshURL(podcastURL:URL, save: boolean = true): Promise<IPodcast> {
-        const podcastFromWeb: IPodcast = await PodcastSuite.fetch(podcastURL, { proxy:this.proxy, fetchEngine: this.fetchEngine });
-        if(save){
-            await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
+        let podcastFromWeb: IPodcast;
+        try{
+            podcastFromWeb = await PodcastSuite.fetch(podcastURL, { proxy:this.proxy, fetchEngine: this.fetchEngine });
+            if(save){
+                await PodcastSuite.db.set(podcastURL.toJSON(), podcastFromWeb);
+            }
+        }catch(error){
+            throw new Error(error);
         }
-
         return podcastFromWeb;
     }
 

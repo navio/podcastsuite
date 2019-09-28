@@ -9,7 +9,7 @@ export default (name = "podcasts", db = "podcastsuite" ) => ({
     db,
     set: function (key:string, value:any){
           const store = new Store(this.db,this.name);
-          set(key,value,store);
+          return set(key,value,store);
         },
     get: function (key:string): Promise<any> | null{
       const store = new Store(this.db,this.name);
@@ -17,7 +17,7 @@ export default (name = "podcasts", db = "podcastsuite" ) => ({
     },
     del: function (key:string){
       const store = new Store(this.db,this.name);
-      del(key,store);
+      return del(key,store);
     }, 
     keys: async function(){
       const store = new Store(this.db,this.name);

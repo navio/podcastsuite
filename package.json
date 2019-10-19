@@ -1,6 +1,6 @@
 {
   "name": "podcastsuite",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A set of utilities to work with Podcasts",
   "source": "index.ts",
   "main": "dist/index.js",
@@ -13,7 +13,8 @@
   },
   "scripts": {
     "start": "microbundle build index.ts",
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "npm start && npm test"
   },
   "keywords": [
     "Podcast"

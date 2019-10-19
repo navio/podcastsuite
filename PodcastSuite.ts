@@ -294,19 +294,22 @@ class PodcastSuite {
     private async init(iKeys:string[]){
         const dbKeys = await PodcastSuite.db.keys();
         const keys = Array.from(new Set( [...iKeys, ...dbKeys] ));
-        keys.forEach( podcast => this.requestURL( new URL(podcast.toString()), { fn: ()=>null, fresh: this.fresh } ));
+        const request = keys.map( (podcast) => this.requestURL( new URL(podcast.toString()), { fn: ()=>null, fresh: this.fresh } ));
+        const completed = await Promise.all(request);
+        return !!completed;
     }
 
     private static db = DB();
     private proxy: IProxy;
     private fresh: number;
     private fetchEngine: Function;
+    public ready: Promise<Boolean>;
 
     constructor( config: IPodcastSuiteConfig = {} ) {
         const { podcasts = [], proxy, fresh = FRESH, fetchEngine = fetch } = config;
         this.proxy = proxy;
         this.fresh = fresh;
-        this.init(podcasts);
+        this.ready = this.init(podcasts);
         this.fetchEngine = fetchEngine;
     }
 

@@ -32,6 +32,14 @@ describe("Podcast Suite", () => {
         expect(PS).toHaveProperty("proxyURL");
     });
 
+    it("should notify when library is ready", async() => {
+        const toTest = "https://tests.com/initlibrary";
+        fetchMock.get(toTest, sample);
+        const ps = new PS({ podcasts: [toTest], fetchEngine: fetchMock });
+        const isReady = await ps.ready;
+        expect(isReady).toBe(true);
+    });
+
     it("can get fetchContent and return it as a Blob", async () => {
         const toTest = "https://tests.com/test";
         fetchMock.get(toTest, {});

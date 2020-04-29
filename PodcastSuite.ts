@@ -8,6 +8,7 @@ export interface IPodcastSuiteConfig {
     podcasts?: string[];
     fresh?: number;
     fetchEngine?: Function;
+    shouldInit?: boolean;
 }
 
 export interface IProxy {
@@ -31,6 +32,7 @@ export interface IRSS {
         [key: string]: any
     }
 }
+
 
 export const PROXY: IProxy = {
 	'https:': '/rss-pg/',
@@ -231,7 +233,7 @@ class PodcastSuite {
     */
     public async mapLibrary(fn:(value:any)=>any){
         const keys = await PodcastSuite.db.keys();
-        return Promise.all(keys.map(fn));
+        return Promise.allSettled(keys.map(fn));
     }
     
     /*
@@ -295,7 +297,7 @@ class PodcastSuite {
         const dbKeys = await PodcastSuite.db.keys();
         const keys = Array.from(new Set( [...iKeys, ...dbKeys] ));
         const request = keys.map( (podcast) => this.requestURL( new URL(podcast.toString()), { fn: ()=>null, fresh: this.fresh } ));
-        const completed = await Promise.all(request);
+        const completed = await Promise.allSettled(request);
         return !!completed;
     }
 
@@ -306,11 +308,11 @@ class PodcastSuite {
     public ready: Promise<Boolean>;
 
     constructor( config: IPodcastSuiteConfig = {} ) {
-        const { podcasts = [], proxy, fresh = FRESH, fetchEngine = fetch } = config;
+        const { podcasts = [], proxy, fresh = FRESH, fetchEngine = fetch, shouldInit = true } = config;
         this.proxy = proxy;
         this.fresh = fresh;
-        this.ready = this.init(podcasts);
         this.fetchEngine = fetchEngine;
+        this.ready = shouldInit ? this.init(podcasts) : this.ready = Promise.resolve(true);
     }
 
 };

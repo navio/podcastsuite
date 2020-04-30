@@ -33,7 +33,6 @@ export interface IRSS {
     }
 }
 
-
 export const PROXY: IProxy = {
 	'https:': '/rss-pg/',
 	'http:': '/rss-less-pg/'

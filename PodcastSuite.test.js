@@ -7,10 +7,11 @@ Object.assign(fetchMock.config, nodeFetch, {
   fetch: nodeFetch
 });
 
-var PS = require("./dist/index.umd.js");
+var PS = require("./dist/index.js").default;
 var fetch = require("node-fetch");
 var sample = require("./mock/sample");
 
+console.log(PS)
 // afterEach(fetchMock.reset);
 
 describe("Podcast Suite", () => {

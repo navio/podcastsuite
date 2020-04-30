@@ -1,6 +1,6 @@
 {
   "name": "podcastsuite",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "A set of utilities to work with Podcasts",
   "source": "index.ts",
   "main": "dist/index.js",
@@ -12,7 +12,7 @@
     "url": "https://github.com/navio/podcastsuite.git"
   },
   "scripts": {
-    "start": "microbundle build index.ts",
+    "start": "npx parcel build index.ts",
     "test": "jest",
     "prepublish": "npm start && npm test"
   },
@@ -23,15 +23,15 @@
   "license": "MIT",
   "dependencies": {
     "idb-keyval": "^3.2.0",
-    "xml2js": "^0.4.19"
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
-    "babel-plugin-transform-async-to-promises": "^0.8.14",
     "fake-indexeddb": "^2.1.1",
-    "fetch-mock": "^7.3.9",
+    "fetch-mock": "^7.7.3",
     "jest": "^24.9.0",
-    "microbundle": "^0.11.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "parcel": "^1.12.4",
+    "typescript": "^3.8.3"
   },
   "jest": {
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(js|jsx)$",

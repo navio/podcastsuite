@@ -7,7 +7,7 @@ Object.assign(fetchMock.config, nodeFetch, {
   fetch: nodeFetch
 });
 
-var PS = require("./dist/index.js").default;
+var PS = require("./dist/index.js");
 var fetch = require("node-fetch");
 var sample = require("./mock/sample");
 

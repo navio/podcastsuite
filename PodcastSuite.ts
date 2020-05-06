@@ -3,8 +3,6 @@ import DB from "./DB";
 import StreamReader from './StreamReader';
 import Format from './Format';
 
-export {DB};
-
 export interface IPodcastSuiteConfig {
     proxy?: IProxy;
     podcasts?: string[];

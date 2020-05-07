@@ -199,7 +199,7 @@ class PodcastSuite {
     @throw Invalid URL
     */
     public async getContent(contentURL: URL, config: {refresh?: boolean} = {}) {
-      const contentFromMemory = await PodcastSuite.db.get(contentURL.toJSON());
+      const contentFromMemory = await PodcastSuite.contentDB.get(contentURL.toJSON());
       const { refresh = false } = config;
       if(contentFromMemory && !refresh){
         return contentFromMemory;
@@ -208,7 +208,7 @@ class PodcastSuite {
         
         const fetchedContent = 
         await PodcastSuite.fetchContent(contentURL, {proxy: this.proxy, fetchEngine: this.fetchEngine });
-        await PodcastSuite.db.set(contentURL.toJSON(), fetchedContent);
+        await PodcastSuite.contentDB.set(contentURL.toJSON(), fetchedContent);
         return fetchedContent;
         
       }catch(error){
@@ -301,6 +301,7 @@ class PodcastSuite {
     }
 
     private static db = DB();
+    private static contentDB = DB('content');
     private proxy: IProxy;
     private fresh: number;
     private fetchEngine: Function;

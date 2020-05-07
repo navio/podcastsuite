@@ -1,5 +1,5 @@
 import xml2js from 'xml2js';
-import DB from "./DB";
+import DB, {DBInstance} from "./DB";
 import StreamReader from './StreamReader';
 import Format from './Format';
 
@@ -80,6 +80,17 @@ class PodcastSuite {
                 reject(error)
             }
         });
+    }
+
+    /*
+    A function that creates a DB using indexDB by default uses podcastsuite values.
+    System used internally, exposed to reused by clients.
+    @param Table name string
+    @param Databse name stirng
+    @return DBInstance an object containing set,get,keys,delete and entries.
+    */
+    public static createDatabase(table: string, database: string): DBInstance {
+        return DB( table, database );
     }
 
     /*

@@ -83,4 +83,18 @@ describe("Podcast Suite", () => {
         const sizeL = await PS.fetchSize(new URL(toTest), { fetchEngine: fetchMock });
         expect(sizeL === size ).toBe(true)
     });
+
+    it("create a DB", async () => {
+        const name = 'TEST';
+        const value = 'response'
+        const db = PS.createDatabase('TableName', 'AnotheDatabse');
+        expect(db).toHaveProperty('get');
+        expect(db).toHaveProperty('set');
+        expect(db).toHaveProperty('del');
+        await db.set(name,value);
+        const result =  await db.get(name);
+        expect(result).toBe(value)
+    });
+
+
 });

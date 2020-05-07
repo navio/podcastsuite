@@ -4,18 +4,28 @@ const toArray = () => new Promise(acc=>{
   keys().then(keys => acc(Promise.all(keys.map( (key) => get(key) ))));
 });
 
-export default (name = "podcasts", db = "podcastsuite" ) => ({ 
+export interface DBInstance {
+  name: string;
+  db: string;
+  set: (key:IDBValidKey, value:any) => Promise<void>;
+  get: (key:IDBValidKey) => Promise<any>;
+  del: (key:IDBValidKey) => Promise<void>;
+  keys: () => Promise<IDBValidKey[]>;
+  entries: () => Promise<Array<any>>;
+}
+
+export default (name = "podcasts", db = "podcastsuite" ): DBInstance => ({ 
     name,
     db,
-    set: function (key:string, value:any){
+    set: function (key:IDBValidKey, value:any){
           const store = new Store(this.db,this.name);
           return set(key,value,store);
         },
-    get: function (key:string): Promise<any> | null{
+    get: function (key:IDBValidKey): Promise<any> | null{
       const store = new Store(this.db,this.name);
       return get(key,store) || null;
     },
-    del: function (key:string){
+    del: function (key:IDBValidKey){
       const store = new Store(this.db,this.name);
       return del(key,store);
     }, 

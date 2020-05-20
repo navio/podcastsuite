@@ -45,3 +45,5 @@ IPodcast {
 */
 
 ```
+
+https://github.com/gpodder/podcast-feed-best-practice/blob/master/podcast-feed-best-practice.md

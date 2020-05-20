@@ -21,6 +21,12 @@ export interface IPodcast {
     description?: string;
     url: string;
     link?: string;
+    author?: string;
+    category?: string;
+    explicit?: string;
+    summary?: string;
+    copyright?: string;
+    language?: string;
     image?: string;
     items?: any[];
     created: number;
@@ -190,13 +196,13 @@ class PodcastSuite {
     @return IPodcast Object
     @throw Invalid URL
     */
-    public async getPodcast(key: string, config: { latest?: boolean, save?: boolean } = {} ){
-        const { latest = false , save = true }  = config;
+    public async getPodcast(key: string, config: { latest?: boolean, save?: boolean, fresh?: number } = {} ){
+        const { latest = false , save = true, fresh =  this.fresh }  = config;
         try {
             const podcast = new URL(key);
-            return latest ? 
+            return latest && !fresh ? 
                 this.refreshURL(podcast, save): 
-                this.requestURL(podcast, { save });
+                this.requestURL(podcast, { save, fresh });
         }catch(e){
             throw "Not a Valid URL";
         }

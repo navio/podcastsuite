@@ -28,12 +28,12 @@ export default function format(
     "copyright",
     "language",
   ].forEach((key) => {
-    if (channel[key]) {
+    if (channel[key]  !== undefined ) {
       const [prefix, keyname] = key.split(":");
       if (keyname) {
-        rss[keyname] = channel[key][0];
+        rss[keyname] = channel[key] && channel[key][0];
       } else {
-        rss[prefix] = channel[key][0];
+        rss[prefix] = channel[key] && channel[key][0];
       }
     }
   });
@@ -61,12 +61,12 @@ export default function format(
         "itunes:episode",
         "itunes:episodeType",
       ].forEach((key) => {
-        if (channel[key]) {
+        if (channel[key] !== undefined ) {
           const [prefix, keyname] = key.split(":");
           if (keyname) {
-            obj[keyname] = val[key][0];
+            obj[keyname] = val[key] && val[key][0];
           } else {
-            obj[prefix] = val[key][0];
+            obj[prefix] = val[key] && val[key][0];
           }
         }
       });

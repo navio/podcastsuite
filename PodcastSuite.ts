@@ -115,7 +115,7 @@ class PodcastSuite {
             .then( rawresponse => {
                 
                 if(!rawresponse.ok){
-                    throw "Error Message";
+                    throw new Error("Bad response: "+ rawresponse.status);
                 }
                 length = Number(rawresponse.headers.get("content-length"));
                 return rawresponse.text();
@@ -203,7 +203,7 @@ class PodcastSuite {
             return latest && !fresh ? 
                 this.refreshURL(podcast, save): 
                 this.requestURL(podcast, { save, fresh });
-        }catch(e){
+        } catch(e) {
             throw "Not a Valid URL";
         }
     }

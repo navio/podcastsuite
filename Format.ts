@@ -2,7 +2,7 @@ import { IRSS, IPodcast } from "./PodcastSuite";
 
 export default function format(
   json: IRSS,
-  init: { length?: number; url?: string } = { length: Date.now() }
+  init: { length?: number; url?: string, etag?: number } = { length: Date.now() }
 ): IPodcast {
   const channel = Array.isArray(json.rss.channel)
     ? json.rss.channel[0]

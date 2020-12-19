@@ -1,14 +1,38 @@
 import { IRSS, IPodcast } from "./PodcastSuite";
 
+export interface IEpisode {
+  title: string;
+  description: string;
+  url: string;
+  link: string;
+  guid: string;
+  media: {
+    content?: string;
+    thumbnail?: string;
+  }
+  image?: string;
+  created?: number;
+  subtitle?: string;
+  summary?: string;
+  author?: string;
+  explicit?: string;
+  season?: string;
+  duration?: number;
+  episode?: string;
+  episodeType?: string;
+  enclosures?: string[];
+}
+
 export default function format(
   json: IRSS,
-  init: { length?: number; url?: string, etag?: number } = { length: Date.now() }
+  init: { length?: number; url?: string; etag?: number } = {
+    length: Date.now(),
+  }
 ): IPodcast {
   const channel = Array.isArray(json.rss.channel)
     ? json.rss.channel[0]
     : json.rss.channel;
   const rss: any = Object.assign(init, { items: [], created: Date.now() });
-
 
   if (channel.image) {
     rss.image = channel.image[0].url;
@@ -18,7 +42,8 @@ export default function format(
     rss.image = channel["itunes:image"][0].href;
   }
 
-  [ "title",
+  [
+    "title",
     "description",
     "link",
     "itunes:author",
@@ -28,7 +53,7 @@ export default function format(
     "copyright",
     "language",
   ].forEach((key) => {
-    if (channel[key]  !== undefined ) {
+    if (channel[key] !== undefined) {
       const [prefix, keyname] = key.split(":");
       if (keyname) {
         rss[keyname] = channel[key] && channel[key][0];
@@ -45,11 +70,19 @@ export default function format(
       channel.item = [channel.item];
     }
     channel.item.forEach(function (val) {
-      const obj: { [key: string]: any } = {};
-      obj.title = val.title ? val.title[0] : "";
-      obj.description = val.description ? val.description[0] : "";
-      obj.url = obj.link = val.link ? val.link[0] : "";
-      obj.guid = val.guid && val.guid[0] && (val.guid[0]["_"] || val.guid[0]);
+      const title = val.title ? val.title[0] : "";
+      const description = val.description ? val.description[0] : "";
+      const url = val.link ? val.link[0] : "";
+      const guid = val.guid && val.guid[0] && (val.guid[0]["_"] || val.guid[0]);
+
+      const obj: IEpisode = {
+        title,
+        description,
+        url,
+        guid,
+        link: url,
+        media: {}
+      };
 
       [
         "itunes:subtitle",
@@ -61,7 +94,7 @@ export default function format(
         "itunes:episode",
         "itunes:episodeType",
       ].forEach((key) => {
-        if (channel[key] !== undefined ) {
+        if (channel[key] !== undefined) {
           const [prefix, keyname] = key.split(":");
           if (keyname) {
             obj[keyname] = val[key] && val[key][0];
@@ -83,25 +116,24 @@ export default function format(
         obj.created = Date.parse(val.pubDate[0]);
       }
       if (val["media:content"]) {
-        obj.media = val.media || {};
         obj.media.content = val["media:content"];
       }
       if (val["media:thumbnail"]) {
-        obj.media = val.media || {};
         obj.media.thumbnail = val["media:thumbnail"];
       }
 
       if (val.enclosure) {
-        obj.enclosures = [];
+        const enclosures = [];
         if (!Array.isArray(val.enclosure)) val.enclosure = [val.enclosure];
         val.enclosure.forEach(function (enclosure) {
           var enc = {};
           for (const x in enclosure) {
             enc[x] = enclosure[x][0];
           }
-          obj.enclosures.push(enc);
+          enclosures.push(enc);
         });
-        obj.media = obj.enclosures.length > 0 ? obj.enclosures[0] : null;
+        obj.enclosures = enclosures;
+        obj.media = enclosures.length > 0 ? enclosures[0] : null;
       }
       rss.items.push(obj);
     });

@@ -1,7 +1,7 @@
 import xml2js from "xml2js";
 import DB, { DBInstance } from "./DB";
 import StreamReader from "./StreamReader";
-import Format from "./Format";
+import Format, { IEpisode } from "./Format";
 
 export interface IPodcastSuiteConfig {
   proxy?: IProxy;
@@ -28,7 +28,7 @@ export interface IPodcast {
   copyright?: string;
   language?: string;
   image?: string;
-  items?: any[];
+  items?: IEpisode;
   created: number;
   length?: number;
 }
@@ -286,12 +286,12 @@ class PodcastSuite {
         proxy: this.proxy,
         fetchEngine: this.fetchEngine,
       });
-      return  [url, {...podcast, readyforUpdate: !(webSize !== length)}];
+      return [url, { ...podcast, readyforUpdate: !(webSize !== length) }];
     });
-    return (await Promise.all(libraryRequest)).filter(((request) => {
-        const [, data] = request;
-        return data.readyforUpdate;
-    }));
+    return (await Promise.all(libraryRequest)).filter((request) => {
+      const [, data] = request;
+      return data.readyforUpdate;
+    });
   }
 
   /*

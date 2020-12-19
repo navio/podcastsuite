@@ -11,7 +11,7 @@
     "url": "https://github.com/navio/podcastsuite.git"
   },
   "scripts": {
-    "start": "microbundle-crl index.ts",
+    "start": "microbundle index.ts",
     "test": "jest",
     "prepublish": "npm start && npm test"
   },

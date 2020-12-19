@@ -28,7 +28,7 @@ export interface IPodcast {
   copyright?: string;
   language?: string;
   image?: string;
-  items?: IEpisode;
+  items?: IEpisode[];
   created: number;
   length?: number;
 }

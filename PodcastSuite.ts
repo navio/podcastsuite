@@ -299,10 +299,10 @@ class PodcastSuite {
     @fn function recevies value of key and modifies it.
     @return Promise with an array of all values modified by callback
     */
-  public async mapLibraryEntries(fn: (value: any) => any) {
+  public async mapLibraryEntries(fn: (value: IPodcast) => any) {
     const entries = await PodcastSuite.db.entries();
-    const results = entries.map(fn);
-    return;
+    const results: IPodcast[] = entries.map(fn);
+    return results;
   }
 
   /*

@@ -1,6 +1,6 @@
 {
   "name": "podcastsuite",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "A set of utilities to work with Podcasts",
   "source": "index.ts",
   "main": "dist/index.js",

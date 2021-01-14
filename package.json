@@ -30,7 +30,9 @@
     "fetch-mock": "^7.7.3",
     "jest": "^24.9.0",
     "microbundle-crl": "^0.13.9",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.1",
+    "serialize-javascript": ">=3.1.0",
+    "node-notifier": "8.0.1"
   },
   "jest": {
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(js|jsx)$",

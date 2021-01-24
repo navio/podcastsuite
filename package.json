@@ -1,6 +1,6 @@
 {
   "name": "podcastsuite",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "A set of utilities to work with Podcasts",
   "source": "index.ts",
   "main": "dist/index.js",
@@ -31,8 +31,8 @@
     "jest": "^24.9.0",
     "microbundle-crl": "^0.13.9",
     "node-fetch": "^2.6.1",
-    "serialize-javascript": ">=3.1.0",
-    "node-notifier": "8.0.1"
+    "node-notifier": "8.0.1",
+    "serialize-javascript": ">=3.1.0"
   },
   "jest": {
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(js|jsx)$",

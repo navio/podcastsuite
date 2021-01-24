@@ -6,7 +6,12 @@ export interface IEpisode {
   url: string;
   link: string;
   guid: string;
-  media: {
+  media?: {
+    length: string;
+    type: string;
+    url: string;
+  } | string,
+  extra?: {
     content?: string;
     thumbnail?: string;
   }
@@ -81,7 +86,7 @@ export default function format(
         url,
         guid,
         link: url,
-        media: {}
+        media: ''
       };
 
       [
@@ -107,19 +112,19 @@ export default function format(
       if (val["itunes:image"]) {
         const hasImageHref =
           val["itunes:image"][0] &&
-          val["itunes:image"][0].$ &&
-          val["itunes:image"][0].$.href;
-        const image = hasImageHref ? val["itunes:image"][0].$.href : null;
+          val["itunes:image"][0] &&
+          val["itunes:image"][0].href;
+        const image = hasImageHref ? val["itunes:image"][0].href : null;
         obj.image = image;
       }
       if (val.pubDate) {
         obj.created = Date.parse(val.pubDate[0]);
       }
       if (val["media:content"]) {
-        obj.media.content = val["media:content"];
+        obj.extra.content = val["media:content"];
       }
       if (val["media:thumbnail"]) {
-        obj.media.thumbnail = val["media:thumbnail"];
+        obj.extra.thumbnail = val["media:thumbnail"];
       }
 
       if (val.enclosure) {

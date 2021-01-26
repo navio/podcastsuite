@@ -402,8 +402,8 @@ class PodcastSuite {
     return !!completed;
   }
 
-  private static db = DB();
-  private static contentDB = DB("content");
+  protected static db = DB();
+  protected static contentDB = DB("content");
   private proxy: IProxy;
   private fresh: number;
   private fetchEngine: Function;

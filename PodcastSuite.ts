@@ -37,6 +37,7 @@ export interface IRSS {
   rss: {
     [key: string]: any;
   };
+  feed: string;
 }
 
 export const PROXY: IProxy = {

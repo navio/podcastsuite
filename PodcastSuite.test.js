@@ -2,6 +2,7 @@
 
 require("fake-indexeddb/auto");
 var nodeFetch = jest.requireActual('node-fetch');
+var fs = require("fs");
 var fetchMock = require('fetch-mock').sandbox();
 Object.assign(fetchMock.config, nodeFetch, {
   fetch: nodeFetch
@@ -10,8 +11,8 @@ Object.assign(fetchMock.config, nodeFetch, {
 var PS = require("./dist/index.js");
 var fetch = require("node-fetch");
 var sample = require("./mock/sample");
+var rawRSS = fs.readFileSync( './mock/podcast.rss', 'utf8' )
 
-console.log(PS)
 // afterEach(fetchMock.reset);
 
 describe("Podcast Suite", () => {
@@ -53,6 +54,12 @@ describe("Podcast Suite", () => {
         const podcast = PS.format(RSS);
         expect(podcast.title).toBe("Up First");
         expect(podcast.items.length).toBe(2);
+        expect(podcast.description.length).toBe(362);
+        const episode = podcast.items[0];
+        expect(episode.title).toBe("Tuesday, September 10th, 2019");
+        expect(episode.description.length).toBe(648);
+        expect(episode.media.url.length).toBe(252);
+        expect(episode.image.length).toBe(120)
     });
 
     it("can get fetch and return a podcast object", async () => {
@@ -96,5 +103,17 @@ describe("Podcast Suite", () => {
         expect(result).toBe(value)
     });
 
+    it("parses a RawFile and format it correctly", async() => {
+       const data =  await PS.parser(rawRSS);
+       const podcast = PS.format(data);
+       expect(podcast.title).toBe("Leyendas Legendarias");
+       expect(podcast.description.length).toBe(169);
+       expect(podcast.items.length).toBe(174);
+       const episode = podcast.items[0];
+       expect(episode.title).toBe('BONUS: Lucha Libre Legendaria x Nike');
+       expect(episode.description.length).toBe(442);
+       expect(episode.media.url.length).toBe(240);
+       expect(episode.image.length).toBe(180)
+    });
 
 });

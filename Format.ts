@@ -112,14 +112,14 @@ export default function format(
       if (val["itunes:image"]) {
         const hasImageHref =
           val["itunes:image"][0] &&
-          val["itunes:image"][0] &&
           val["itunes:image"][0].href;
-        const image = hasImageHref ? val["itunes:image"][0].href : null;
+        const image = hasImageHref ? val["itunes:image"][0].href[0] : null;
         obj.image = image;
       }
       if (val.pubDate) {
         obj.created = Date.parse(val.pubDate[0]);
       }
+      obj.extra = {};
       if (val["media:content"]) {
         obj.extra.content = val["media:content"];
       }

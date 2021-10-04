@@ -54,6 +54,7 @@ export default function format(
     "itunes:author",
     "itunes:category",
     "itunes:explicit",
+    "itunes:type",
     "itunes:summary",
     "copyright",
     "language",

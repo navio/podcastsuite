@@ -35,7 +35,7 @@ export default function format(
     length: Date.now(),
   }
 ): IPodcast {
-  const link = url;
+  const link = init.url;
   const channel = Array.isArray(json.rss.channel)
     ? json.rss.channel[0]
     : json.rss.channel;
@@ -88,7 +88,7 @@ export default function format(
         description,
         url,
         guid,
-        podcast,
+        podcast: init.url,
         link,
         media: ''
       };

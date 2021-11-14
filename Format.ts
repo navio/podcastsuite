@@ -6,6 +6,7 @@ export interface IEpisode {
   url: string;
   link: string;
   guid: string;
+  podcast: string;
   media?: {
     length: string;
     type: string;
@@ -34,6 +35,7 @@ export default function format(
     length: Date.now(),
   }
 ): IPodcast {
+  const link = url;
   const channel = Array.isArray(json.rss.channel)
     ? json.rss.channel[0]
     : json.rss.channel;
@@ -86,7 +88,8 @@ export default function format(
         description,
         url,
         guid,
-        link: url,
+        podcast,
+        link,
         media: ''
       };
 

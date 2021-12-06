@@ -103,7 +103,7 @@ export default function format(
         "itunes:episode",
         "itunes:episodeType",
       ].forEach((key) => {
-        if (channel[key] !== undefined) {
+        if (val[key] !== undefined) {
           const [prefix, keyname] = key.split(":");
           if (keyname) {
             obj[keyname] = val[key] && val[key][0];

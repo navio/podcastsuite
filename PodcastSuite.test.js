@@ -12,6 +12,7 @@ var PS = require("./dist/index.js");
 var fetch = require("node-fetch");
 var sample = require("./mock/sample");
 var rawRSS = fs.readFileSync( './mock/podcast.rss', 'utf8' )
+var rawComplicated = fs.readFileSync( './mock/Complicated.rss', 'utf8' )
 
 // afterEach(fetchMock.reset);
 
@@ -115,5 +116,14 @@ describe("Podcast Suite", () => {
        expect(episode.media.url.length).toBe(240);
        expect(episode.image.length).toBe(180)
     });
+
+    it("parses a RawFile and format it from a Complicated", async() => {
+        const data =  await PS.parser(rawComplicated);
+        const podcast = PS.format(data);
+        expect(podcast.title).toBe("Business Wars");
+        const episode = podcast.items[0];
+        expect(episode.title).toBe('Introducing: Harsh Reality - The Story of Miriam Rivera');
+        expect(episode.episodeType).toBe("trailer");
+     });
 
 });

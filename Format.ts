@@ -83,7 +83,7 @@ export default function format(
       const url = episode.link ? episode.link[0] : "";
       const guid = episode.guid && episode.guid[0] && (episode.guid[0]["_"] || episode.guid[0]);
 
-      const obj: IEpisode = {
+      const iEpisode: IEpisode = {
         title,
         description,
         url,
@@ -106,9 +106,9 @@ export default function format(
         if (episode[key] !== undefined) {
           const [prefix, keyname] = key.split(":");
           if (keyname) {
-            obj[keyname] = episode[key] && episode[key][0];
+            iEpisode[keyname] = episode[key] && episode[key][0];
           } else {
-            obj[prefix] = episode[key] && episode[key][0];
+            iEpisode[prefix] = episode[key] && episode[key][0];
           }
         }
       });
@@ -118,17 +118,17 @@ export default function format(
           episode["itunes:image"][0] &&
           episode["itunes:image"][0].href;
         const image = hasImageHref ? episode["itunes:image"][0].href[0] : null;
-        obj.image = image;
+        iEpisode.image = image;
       }
       if (episode.pubDate) {
-        obj.created = Date.parse(episode.pubDate[0]);
+        iEpisode.created = Date.parse(episode.pubDate[0]);
       }
-      obj.extra = {};
+      iEpisode.extra = {};
       if (episode["media:content"]) {
-        obj.extra.content = episode["media:content"];
+        iEpisode.extra.content = episode["media:content"];
       }
       if (episode["media:thumbnail"]) {
-        obj.extra.thumbnail = episode["media:thumbnail"];
+        iEpisode.extra.thumbnail = episode["media:thumbnail"];
       }
 
       if (episode.enclosure) {
@@ -141,10 +141,10 @@ export default function format(
           }
           enclosures.push(enc);
         });
-        obj.enclosures = enclosures;
-        obj.media = enclosures.length > 0 ? enclosures[0] : null;
+        iEpisode.enclosures = enclosures;
+        iEpisode.media = enclosures.length > 0 ? enclosures[0] : null;
       }
-      rss.items.push(obj);
+      rss.items.push(iEpisode);
     });
   }
 

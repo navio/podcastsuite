@@ -77,11 +77,11 @@ export default function format(
     if (!Array.isArray(channel.item)) {
       channel.item = [channel.item];
     }
-    channel.item.forEach(function (val) {
-      const title = val.title ? val.title[0] : "";
-      const description = val.description ? val.description[0] : "";
-      const url = val.link ? val.link[0] : "";
-      const guid = val.guid && val.guid[0] && (val.guid[0]["_"] || val.guid[0]);
+    channel.item.forEach(function (episode) {
+      const title = episode.title ? episode.title[0] : "";
+      const description = episode.description ? episode.description[0] : "";
+      const url = episode.link ? episode.link[0] : "";
+      const guid = episode.guid && episode.guid[0] && (episode.guid[0]["_"] || episode.guid[0]);
 
       const obj: IEpisode = {
         title,
@@ -103,38 +103,38 @@ export default function format(
         "itunes:episode",
         "itunes:episodeType",
       ].forEach((key) => {
-        if (val[key] !== undefined) {
+        if (episode[key] !== undefined) {
           const [prefix, keyname] = key.split(":");
           if (keyname) {
-            obj[keyname] = val[key] && val[key][0];
+            obj[keyname] = episode[key] && episode[key][0];
           } else {
-            obj[prefix] = val[key] && val[key][0];
+            obj[prefix] = episode[key] && episode[key][0];
           }
         }
       });
 
-      if (val["itunes:image"]) {
+      if (episode["itunes:image"]) {
         const hasImageHref =
-          val["itunes:image"][0] &&
-          val["itunes:image"][0].href;
-        const image = hasImageHref ? val["itunes:image"][0].href[0] : null;
+          episode["itunes:image"][0] &&
+          episode["itunes:image"][0].href;
+        const image = hasImageHref ? episode["itunes:image"][0].href[0] : null;
         obj.image = image;
       }
-      if (val.pubDate) {
-        obj.created = Date.parse(val.pubDate[0]);
+      if (episode.pubDate) {
+        obj.created = Date.parse(episode.pubDate[0]);
       }
       obj.extra = {};
-      if (val["media:content"]) {
-        obj.extra.content = val["media:content"];
+      if (episode["media:content"]) {
+        obj.extra.content = episode["media:content"];
       }
-      if (val["media:thumbnail"]) {
-        obj.extra.thumbnail = val["media:thumbnail"];
+      if (episode["media:thumbnail"]) {
+        obj.extra.thumbnail = episode["media:thumbnail"];
       }
 
-      if (val.enclosure) {
+      if (episode.enclosure) {
         const enclosures = [];
-        if (!Array.isArray(val.enclosure)) val.enclosure = [val.enclosure];
-        val.enclosure.forEach(function (enclosure) {
+        if (!Array.isArray(episode.enclosure)) episode.enclosure = [episode.enclosure];
+        episode.enclosure.forEach(function (enclosure) {
           var enc = {};
           for (const x in enclosure) {
             enc[x] = enclosure[x][0];
